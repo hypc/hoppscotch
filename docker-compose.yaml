@@ -1,0 +1,62 @@
+version: '3.7'
+
+services:
+  hoppscotch:
+    image: hypc/hoppscotch
+    container_name: hoppscotch
+    restart: always
+    labels:
+      - traefik.http.routers.hoppscotch.rule=Host(`hoppscotch.${BASE_DOMAIN}`)
+      - traefik.http.routers.hoppscotch.entrypoints=websecure
+      - traefik.http.routers.hoppscotch.service=hoppscotch
+      - traefik.http.services.hoppscotch.loadbalancer.server.port=8080
+  hoppscotch-backend:
+    image: hypc/hoppscotch-backend
+    container_name: hoppscotch-backend
+    restart: always
+    labels:
+      - traefik.http.routers.hoppscotch-backend.rule=Host(`hoppscotch.${BASE_DOMAIN}`) && PathPrefix(`/v1`, `/graphql`)
+      - traefik.http.routers.hoppscotch-backend.entrypoints=websecure
+      - traefik.http.routers.hoppscotch-backend.service=hoppscotch-backend
+      - traefik.http.services.hoppscotch-backend.loadbalancer.server.port=3170
+  hoppscotch-db-migrate:
+    image: hypc/hoppscotch-backend
+    container_name: hoppscotch-db-migrate
+    restart: on-failure
+    labels:
+      - traefik.enable=false
+    command: node_modules/.bin/prisma migrate dev
+  hoppscotch-admin:
+    image: hypc/hoppscotch-admin
+    container_name: hoppscotch-admin
+    restart: always
+    labels:
+      - traefik.http.routers.hoppscotch-admin.rule=Host(`hoppscotch-admin.${BASE_DOMAIN}`)
+      - traefik.http.routers.hoppscotch-admin.entrypoints=websecure
+      - traefik.http.routers.hoppscotch-admin.service=hoppscotch-admin
+      - traefik.http.services.hoppscotch-admin.loadbalancer.server.port=8080
+  proxyscotch:
+    image: hypc/proxyscotch
+    container_name: proxyscotch
+    restart: always
+    labels:
+      - traefik.http.routers.proxyscotch.rule=Host(`proxyscotch.${BASE_DOMAIN}`)
+      - traefik.http.routers.proxyscotch.entrypoints=websecure
+      - traefik.http.routers.proxyscotch.service=proxyscotch
+      - traefik.http.services.proxyscotch.loadbalancer.server.port=9159
+  hoppscotch-smtp:
+    image: tianon/exim4
+    container_name: hoppscotch-smtp
+    restart: always
+    labels:
+      - traefik.enable=false
+    volumes:
+      - type: tmpfs
+        target: /var/spool/exim4
+      - type: tmpfs
+        target: /var/log/exim4
+
+networks:
+  default:
+    external: true
+    name: services

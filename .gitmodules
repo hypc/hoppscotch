@@ -1,0 +1,6 @@
+[submodule "hoppscotch"]
+	path = hoppscotch
+	url = git@github.com:hoppscotch/hoppscotch.git
+[submodule "proxyscotch"]
+	path = proxyscotch
+	url = git@github.com:hoppscotch/proxyscotch.git
